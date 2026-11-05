@@ -1,0 +1,162 @@
+# Pull-request checks. Every job here is a required status check on main. Action
+# refs use version tags for readability; pin them to commit SHAs with Renovate
+# to match the org's release-repo convention.
+name: PR
+
+on:
+  pull_request:
+    # `labeled` starts a run when a maintainer adds the `run-ci` label, which is
+    # how the acceptance suite is triggered (see the acceptance job below).
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Static checks
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v2
+      - name: Lint
+        run: mise run lint
+      - name: Tidy
+        run: mise run tidy-check
+      - name: License check
+        run: mise run license-check
+      - name: Example formatting
+        run: mise run fmt-examples
+      - name: Docs up to date
+        run: mise run docs-check
+      - name: Changelog has an Unreleased entry
+        run: grep -q '## Unreleased' CHANGELOG.md
+      - name: Every service package has an acceptance test
+        run: .github/scripts/check-testacc-present.sh
+
+  security:
+    name: Security
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # polin-guard --ci needs full history to see all tracked files
+          persist-credentials: false
+      - name: Scan for injected payloads (polin-guard)
+        run: npx --yes polin-guard@0.3.2 --ci
+      - uses: jdx/mise-action@v2
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v2
+      - name: Test with coverage
+        run: mise run test-coverage
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  snapshot:
+    name: Release build (snapshot)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v2
+      - name: Cross-compile all platforms
+        run: mise run snapshot
+
+  acceptance:
+    name: Acceptance tests (scoped, production sandbox)
+    # Run only after the cheap checks pass, so real computes are never created
+    # for a pull request that already fails lint, unit tests or security.
+    needs: [checks, security, test]
+    # Opt-in, same-repo only: runs when a repo pull request has the `run-ci` label
+    # (write access required to label). Forks are excluded — they receive no
+    # secrets, so acceptance cannot authenticate. Test a fork by pushing its
+    # branch to this repository.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(github.event.pull_request.labels.*.name, 'run-ci')
+    runs-on: ubuntu-24.04
+    # Serialize sandbox runs (shared with nightly) so one run's sweep can't delete
+    # another's in-flight computes. Queued runs wait rather than cancel.
+    concurrency:
+      group: acceptance-sandbox
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          # No explicit ref: check out the pull-request merge ref, as the other
+          # jobs do, so the required gate tests the merge result. Pinning
+          # head.sha would exclude base-branch changes landed after the PR.
+      - uses: jdx/mise-action@v2
+      - name: Map changed files to acceptance packages
+        id: scope
+        run: .github/scripts/acceptance-scope.sh "origin/${{ github.base_ref }}"
+      - name: Sweep leftovers
+        if: steps.scope.outputs.pkgs != ''
+        env:
+          STRETTCH_CLOUD_API_KEY: ${{ secrets.STRETTCH_CLOUD_API_KEY_SANDBOX }}
+        run: mise run sweep
+      - name: Run scoped acceptance tests
+        if: steps.scope.outputs.pkgs != ''
+        env:
+          STRETTCH_CLOUD_API_KEY: ${{ secrets.STRETTCH_CLOUD_API_KEY_SANDBOX }}
+          PKGS: ${{ steps.scope.outputs.pkgs }}
+        run: mise run test-acceptance-changed
+      - name: Upload acceptance coverage
+        if: steps.scope.outputs.pkgs != ''
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage-acc.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # The required status check for merging (not `acceptance` itself). A same-repo
+  # pull request fails the gate unless acceptance ran and passed; forks are exempt
+  # since they cannot run it.
+  acceptance-gate:
+    name: Acceptance gate
+    needs: [acceptance]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require acceptance to pass (same-repo pull requests)
+        env:
+          RESULT: ${{ needs.acceptance.result }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          if [ "$RESULT" = "success" ]; then
+            echo "Acceptance gate OK (result: success)."
+            exit 0
+          fi
+          if [ "$SAME_REPO" = "true" ]; then
+            echo "::error::Acceptance did not run or did not pass (result: $RESULT)."
+            echo "Add the 'run-ci' label to run acceptance; once set it persists and re-runs on every push."
+            exit 1
+          fi
+          echo "Fork pull request: acceptance cannot run; gate not enforced (result: $RESULT)."

@@ -1,0 +1,22 @@
+# Both patch and project coverage are enforced at 98%: every change must cover
+# at least 98% of the lines it adds or modifies, and overall project coverage
+# must stay at or above 98%.
+coverage:
+  status:
+    patch:
+      default:
+        target: 98%
+        threshold: 0%
+    project:
+      default:
+        target: 98%
+        threshold: 0%
+
+ignore:
+  - "main.go"
+  - "**/*_test.go"
+  - "internal/acctest/**"
+
+comment:
+  layout: "reach, diff, files"
+  require_changes: false
