@@ -90,7 +90,7 @@ func (p *strettchcloudProvider) Schema(_ context.Context, _ provider.SchemaReque
 				Sensitive:           true,
 			},
 			"api_url": schema.StringAttribute{
-				MarkdownDescription: "Base URL of the Strettch Cloud API. Defaults to the production URL. May also be set with the `STRETTCH_CLOUD_API_URL` environment variable.",
+				MarkdownDescription: "Base URL of the Strettch Cloud API. Defaults to `https://api.strettch.cloud/api/v1`. May also be set with the `STRETTCH_CLOUD_API_URL` environment variable.",
 				Optional:            true,
 			},
 			"requests_per_second": schema.Float64Attribute{
