@@ -1,4 +1,4 @@
-# Nightly full acceptance run against the production sandbox team. It establishes
+# Nightly full acceptance run against the sandbox team. It establishes
 # the project coverage baseline and is the release gate: the last nightly must be
 # green before agent-releases may tag.
 name: Nightly
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   acceptance:
-    name: Full acceptance suite (production sandbox)
+    name: Full acceptance suite
     runs-on: ubuntu-24.04
     # Shares the acceptance-sandbox group with the PR acceptance job (see pr.yml)
     # so a nightly run and a PR run never sweep the shared sandbox at the same

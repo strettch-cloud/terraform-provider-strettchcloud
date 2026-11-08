@@ -35,8 +35,6 @@ jobs:
         run: mise run fmt-examples
       - name: Docs up to date
         run: mise run docs-check
-      - name: Changelog has an Unreleased entry
-        run: grep -q '## Unreleased' CHANGELOG.md
       - name: Every service package has an acceptance test
         run: .github/scripts/check-testacc-present.sh
 
@@ -89,7 +87,7 @@ jobs:
         run: mise run snapshot
 
   acceptance:
-    name: Acceptance tests (scoped, production sandbox)
+    name: Acceptance tests
     # Run only after the cheap checks pass, so real computes are never created
     # for a pull request that already fails lint, unit tests or security.
     needs: [checks, security, test]

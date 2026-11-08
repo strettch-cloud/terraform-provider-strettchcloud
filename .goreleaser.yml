@@ -69,9 +69,6 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 
-sboms:
-  - artifacts: archive
-
 release:
   # The registry manifest ships in every release.
   extra_files:
@@ -79,4 +76,26 @@ release:
       name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
 
 changelog:
-  disable: true
+  # Lean release notes generated from commit subjects since the last tag.
+  use: git
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "^style:"
+      - "^refactor:"
+      - "^build:"
+      - "Merge pull request"
+      - "Merge branch"
+  groups:
+    - title: Features
+      regexp: "^feat"
+      order: 0
+    - title: Bug fixes
+      regexp: "^fix"
+      order: 1
+    - title: Other
+      order: 999
