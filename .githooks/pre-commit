@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-commit checks: run the same payload scan and linter CI runs, so problems
+# surface before the commit rather than in the pull request.
+#
+# Enable once per clone:  git config core.hooksPath .githooks  (or: mise run install-hooks)
+#
+# Each tool is skipped, with a note, if its runtime is missing; CI still
+# enforces both.
+set -e
+
+# polin-guard: block obfuscated or injected payloads from entering the repo.
+if command -v npx >/dev/null 2>&1; then
+  npx --yes polin-guard@0.3.2 --staged
+else
+  echo "polin-guard: Node/npx not found — skipping local scan (CI still enforces it)." >&2
+fi
+
+# Lint: golangci-lint via mise, the same task CI runs.
+if command -v mise >/dev/null 2>&1; then
+  mise run lint
+else
+  echo "lint: mise not found — skipping (CI still enforces it)." >&2
+fi

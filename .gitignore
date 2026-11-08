@@ -28,6 +28,20 @@ go.work.sum
 # env file
 .env
 
+# GoReleaser build output (`mise run snapshot` / release builds)
+dist/
+
+# Locally built provider binary (`go build`)
+/terraform-provider-strettchcloud
+
+# Terraform local state, lock file and dev overrides from running examples
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.terraformrc
+*.tfrc
+
 # Editor/IDE
 # .idea/
 # .vscode/

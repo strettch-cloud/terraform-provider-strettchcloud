@@ -1,0 +1,56 @@
+# Nightly full acceptance run against the production sandbox team. It establishes
+# the project coverage baseline and is the release gate: the last nightly must be
+# green before agent-releases may tag.
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  acceptance:
+    name: Full acceptance suite (production sandbox)
+    runs-on: ubuntu-24.04
+    # Shares the acceptance-sandbox group with the PR acceptance job (see pr.yml)
+    # so a nightly run and a PR run never sweep the shared sandbox at the same
+    # time. Non-canceling: whichever starts first finishes; the other waits.
+    concurrency:
+      group: acceptance-sandbox
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v2
+      - name: Sweep leftovers
+        env: 
+          STRETTCH_CLOUD_API_KEY: ${{ secrets.STRETTCH_CLOUD_API_KEY_SANDBOX }}
+        run: mise run sweep
+      - name: Full acceptance with coverage
+        env:
+          STRETTCH_CLOUD_API_KEY: ${{ secrets.STRETTCH_CLOUD_API_KEY_SANDBOX }}
+        run: mise run test-acceptance-coverage
+      - name: Upload project coverage baseline
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  snapshot:
+    name: Release build (snapshot)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v2
+      - name: Cross-compile all platforms
+        run: mise run snapshot
