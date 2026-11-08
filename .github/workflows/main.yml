@@ -1,0 +1,25 @@
+# Post-merge checks on main. 
+name: Main
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: main-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  polin-guard:
+    name: Scan for injected payloads (polin-guard)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # polin-guard --ci needs full history to see all tracked files
+          persist-credentials: false
+      - name: Scan for injected payloads (polin-guard)
+        run: npx --yes polin-guard@0.3.2 --ci

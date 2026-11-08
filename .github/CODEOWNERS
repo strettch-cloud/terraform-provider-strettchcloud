@@ -1,0 +1,6 @@
+# Changes to CI, the release build and dependencies need a maintainer's review.
+/.github/         @claranceliberi @dushimsam
+/.goreleaser.yml  @claranceliberi @dushimsam
+/mise.toml        @claranceliberi @dushimsam
+/go.mod           @claranceliberi @dushimsam
+/go.sum           @claranceliberi @dushimsam

@@ -38,7 +38,7 @@ run = [
 ]
 
 [tasks.test-acceptance]
-description = "full acceptance suite. Real API (production sandbox team), creates computes"
+description = "full acceptance suite. Real API (sandbox team), creates computes"
 run = "TF_ACC=1 go test ./... -v -parallel 1 -timeout 60m"
 
 [tasks.test-acceptance-coverage]

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/strettch-cloud/terraform-provider-strettchcloud/security/advisories/new
+    about: Please report security issues privately, never in a public issue.
+  - name: Provider documentation
+    url: https://registry.terraform.io/providers/strettch-cloud/strettchcloud/latest/docs
+    about: Resource and data-source reference on the Terraform Registry.

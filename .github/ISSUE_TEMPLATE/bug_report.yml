@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in the Strettch Cloud provider does not work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Security issues go through private reporting, see SECURITY.md. Do not include your API key or other secrets from your config or logs.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Terraform configuration
+      description: A minimal config that reproduces the issue (redact secrets).
+      render: terraform
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: e.g. the commands you ran (plan/apply/import) and what you observed.
+    validations:
+      required: true
+  - type: input
+    id: provider-version
+    attributes:
+      label: Provider version
+      placeholder: 1.1.0
+    validations:
+      required: true
+  - type: input
+    id: terraform-version
+    attributes:
+      label: Terraform version
+      description: Output of `terraform version`
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output with `TF_LOG=DEBUG` (redact secrets).
+      render: text
