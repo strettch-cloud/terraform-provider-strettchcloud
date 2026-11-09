@@ -5,7 +5,9 @@ name: Nightly
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    # 03:23 UTC. Deliberately off the top of the hour: GitHub delays or drops
+    # scheduled runs during the high-load windows at :00, with no retry.
+    - cron: "23 3 * * *"
   workflow_dispatch:
 
 permissions:
