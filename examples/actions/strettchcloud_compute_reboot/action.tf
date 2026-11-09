@@ -1,6 +1,6 @@
-# Reboot a running compute on demand (Terraform 1.14+):
-#
-#   terraform apply -invoke=action.strettchcloud_compute_reboot.web
+# Reboot a running compute (Terraform 1.14+). Actions run from a resource's
+# lifecycle events — wire the reboot to a trigger such as after_update, then it
+# runs on the next `terraform apply` that updates the compute.
 
 action "strettchcloud_compute_reboot" "web" {
   config {
@@ -8,7 +8,6 @@ action "strettchcloud_compute_reboot" "web" {
   }
 }
 
-# ...or trigger it from a lifecycle event:
 resource "strettchcloud_compute" "web" {
   host_name     = "web-01"
   image         = "UBUNTU-24.04"
