@@ -1,6 +1,6 @@
 # Release. Fires on a vX.Y.Z tag pushed by the agent-releases repo.
-# GoReleaser builds the seven platform binaries, checksums, GPG-signs and SBOMs
-# them, and publishes a GitHub Release. The Registry ingests it via webhook.
+# GoReleaser builds the seven platform binaries, checksums and GPG-signs them,
+# and publishes a GitHub Release. The Registry ingests it via webhook.
 name: Release
 
 on:

@@ -37,5 +37,3 @@ sha256sum --check terraform-provider-strettchcloud_<version>_SHA256SUMS
 gpg --verify terraform-provider-strettchcloud_<version>_SHA256SUMS.sig \
              terraform-provider-strettchcloud_<version>_SHA256SUMS
 ```
-
-Each release also carries an SBOM for its archives.

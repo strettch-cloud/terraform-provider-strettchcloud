@@ -1,4 +1,4 @@
-# GoReleaser builds, checksums, GPG-signs and SBOMs every release.
+# GoReleaser builds, checksums and GPG-signs every release.
 # `mise run snapshot` runs the same build on every PR.
 version: 2
 
