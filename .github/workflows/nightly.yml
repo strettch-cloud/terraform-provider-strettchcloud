@@ -1,6 +1,6 @@
 # Nightly full acceptance run against the sandbox team. It establishes
 # the project coverage baseline and is the release gate: the last nightly must be
-# green before agent-releases may tag.
+# green before a release is tagged.
 name: Nightly
 
 on:
@@ -28,10 +28,10 @@ jobs:
       group: acceptance-sandbox
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: Sweep leftovers
         env: 
           STRETTCH_CLOUD_API_KEY: ${{ secrets.STRETTCH_CLOUD_API_KEY_SANDBOX }}
@@ -41,7 +41,7 @@ jobs:
           STRETTCH_CLOUD_API_KEY: ${{ secrets.STRETTCH_CLOUD_API_KEY_SANDBOX }}
         run: mise run test-acceptance-coverage
       - name: Upload project coverage baseline
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         with:
           files: coverage.out
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -50,9 +50,9 @@ jobs:
     name: Release build (snapshot)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: Cross-compile all platforms
         run: mise run snapshot
