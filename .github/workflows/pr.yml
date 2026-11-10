@@ -1,6 +1,5 @@
-# Pull-request checks. Every job here is a required status check on main. Action
-# refs use version tags for readability; pin them to commit SHAs with Renovate
-# to match the org's release-repo convention.
+# Pull-request checks. Every job here is a required status check on main. Actions
+# are pinned to full commit SHAs; the trailing comment names the version.
 name: PR
 
 on:
@@ -21,10 +20,10 @@ jobs:
     name: Static checks
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: Lint
         run: mise run lint
       - name: Tidy
@@ -42,17 +41,17 @@ jobs:
     name: Security
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0 # polin-guard --ci needs full history to see all tracked files
           persist-credentials: false
       - name: Scan for injected payloads (polin-guard)
         run: npx --yes polin-guard@0.3.2 --ci
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
         with:
           scan-type: fs
           scan-ref: .
@@ -63,14 +62,14 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: Test with coverage
         run: mise run test-coverage
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         with:
           files: coverage.out
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -79,10 +78,10 @@ jobs:
     name: Release build (snapshot)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: Cross-compile all platforms
         run: mise run snapshot
 
@@ -105,14 +104,14 @@ jobs:
       group: acceptance-sandbox
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
           fetch-depth: 0
           # No explicit ref: check out the pull-request merge ref, as the other
           # jobs do, so the required gate tests the merge result. Pinning
           # head.sha would exclude base-branch changes landed after the PR.
-      - uses: jdx/mise-action@v2
+      - uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
       - name: Map changed files to acceptance packages
         id: scope
         run: .github/scripts/acceptance-scope.sh "origin/${{ github.base_ref }}"
@@ -129,7 +128,7 @@ jobs:
         run: mise run test-acceptance-changed
       - name: Upload acceptance coverage
         if: steps.scope.outputs.pkgs != ''
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         with:
           files: coverage-acc.out
           token: ${{ secrets.CODECOV_TOKEN }}
