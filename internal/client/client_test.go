@@ -933,6 +933,20 @@ func TestWaitForState_DestroyedTarget404(t *testing.T) {
 	}
 }
 
+func TestWaitForState_DestroyedTarget410Gone(t *testing.T) {
+	// The production API returns 410 COMPUTE_DESTROYED (not 404) once a compute is
+	// torn down; the destroy wait must treat that as success, not an error.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, http.StatusGone, "COMPUTE_DESTROYED", "Compute has been destroyed")
+	}))
+	defer srv.Close()
+	c := newTestClient(srv.URL)
+	got, err := c.WaitForState(context.Background(), "1", "", StateDestroyed)
+	if err != nil || got != nil {
+		t.Fatalf("410 Gone for destroyed target should be success: got=%v err=%v", got, err)
+	}
+}
+
 func TestWaitForState_GetErrorPropagates(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "UNAUTHORIZED", "no")
@@ -969,6 +983,12 @@ func TestIsNotFoundAndStable(t *testing.T) {
 	}
 	if IsNotFound(&APIError{Status: 500}) {
 		t.Error("500 is not NotFound")
+	}
+	if !IsNotFound(&APIError{Status: http.StatusNotFound}) {
+		t.Error("404 should be NotFound")
+	}
+	if !IsNotFound(&APIError{Status: http.StatusGone}) {
+		t.Error("410 Gone (destroyed) should be NotFound")
 	}
 	if !IsStableState(StateStopped) || IsStableState(StateStarting) {
 		t.Error("IsStableState wrong")

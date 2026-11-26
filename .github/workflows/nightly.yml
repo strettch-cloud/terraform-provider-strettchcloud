@@ -5,9 +5,11 @@ name: Nightly
 
 on:
   schedule:
-    # 03:23 UTC. Deliberately off the top of the hour: GitHub delays or drops
-    # scheduled runs during the high-load windows at :00, with no retry.
-    - cron: "23 3 * * *"
+    # Target: ~03:00 GMT+2. GitHub consistently delays our scheduled runs by
+    # ~8-9h (see run history), so we set the cron ~9h earlier: 16:30 UTC + delay
+    # lands around 01:00-02:00 UTC = 03:00-04:00 GMT+2. This rides on GitHub's
+    # current delay; if that changes, the actual time drifts.
+    - cron: "30 16 * * *"
   workflow_dispatch:
 
 permissions:

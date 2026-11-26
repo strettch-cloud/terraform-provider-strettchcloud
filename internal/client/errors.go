@@ -21,13 +21,15 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("%s (HTTP %d): %s [requestId=%s]", e.Code, e.Status, e.Message, e.RequestID)
 }
 
-// IsNotFound reports whether err is an APIError with HTTP 404. Read uses it to
-// turn a missing compute into a state removal instead of an error; everywhere
-// else a 404 stays an error.
+// IsNotFound reports whether err is an APIError for a compute that no longer
+// exists: HTTP 404 (never existed) or 410 Gone (destroyed — the API returns
+// COMPUTE_DESTROYED once a compute is torn down). Read turns this into a state
+// removal, Delete and the destroy wait treat it as success, and the data source
+// turns it into a "no matching compute" error.
 func IsNotFound(err error) bool {
 	var apiErr *APIError
 	if errors.As(err, &apiErr) {
-		return apiErr.Status == http.StatusNotFound
+		return apiErr.Status == http.StatusNotFound || apiErr.Status == http.StatusGone
 	}
 	return false
 }

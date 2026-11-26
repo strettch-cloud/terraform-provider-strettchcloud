@@ -1,5 +1,5 @@
 [tools]
-go            = "1.27.3"   # must match go.mod
+go            = "1.27.4"   # must match go.mod
 golangci-lint = "2.15.0"
 goreleaser    = "2.19.0"
 syft          = "1.56.0"   # GoReleaser's sboms stage shells out to syft; keep it on PATH in CI
