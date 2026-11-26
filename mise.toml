@@ -1,5 +1,5 @@
 [tools]
-go            = "1.27.3"   # must match go.mod
+go            = "1.27.4"   # must match go.mod
 golangci-lint = "2.15.0"
 goreleaser    = "2.19.0"
 syft          = "1.56.0"   # GoReleaser's sboms stage shells out to syft; keep it on PATH in CI
@@ -37,21 +37,24 @@ run = [
   "go tool cover -func=coverage.out | tail -1",
 ]
 
+# `-parallel 1 -p 1` runs the whole suite serially — one test and one package at a
+# time. The API allows only 2 requests/second, so concurrent packages would blow
+# past it and fail with 429. Keep both flags.
 [tasks.test-acceptance]
 description = "full acceptance suite. Real API (sandbox team), creates computes"
-run = "TF_ACC=1 go test ./... -v -parallel 1 -timeout 60m"
+run = "TF_ACC=1 go test ./... -v -parallel 1 -p 1 -timeout 60m"
 
 [tasks.test-acceptance-coverage]
 description = "full suite incl. acceptance, with coverage (unit + client + acceptance in one report)"
 run = [
-  "TF_ACC=1 go test ./... -v -parallel 1 -timeout 60m -coverprofile=coverage.out -coverpkg=./...",
+  "TF_ACC=1 go test ./... -v -parallel 1 -p 1 -timeout 60m -coverprofile=coverage.out -coverpkg=./...",
   "go tool cover -html=coverage.out -o coverage.html",
   "go tool cover -func=coverage.out | tail -1",
 ]
 
 [tasks.test-acceptance-changed]
 description = "acceptance tests only for the packages the branch changed; PKGS is set by CI (defaults to ./...)"
-run = 'TF_ACC=1 go test ${PKGS:-./...} -v -parallel 1 -timeout 60m -run "^TestAcc" -coverprofile=coverage-acc.out -coverpkg=./...'
+run = 'TF_ACC=1 go test ${PKGS:-./...} -v -parallel 1 -p 1 -timeout 60m -run "^TestAcc" -coverprofile=coverage-acc.out -coverpkg=./...'
 
 [tasks.sweep]
 description = "delete leftovers tagged tf-acc-test; compute is the only package with a sweeper (TestMain in sweep_test.go)"
